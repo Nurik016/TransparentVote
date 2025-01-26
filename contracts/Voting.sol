@@ -46,19 +46,19 @@ constructor(string[] memory _candidateNames, uint256 _durationInMinutes) {
         voters[msg.sender] = true;
     }
 
-    function getAllVotesOfCandiates() public view returns (Candidate[] memory){
+    function getAllVotesOfCandidates() public view returns (Candidate[] memory){
         return candidates;
     }
 
     function getVotingStatus() public view returns (bool) {
-        return (block.timestamp >= votingStart && block.timestamp < votingEnd);
-    }
+    return (block.timestamp >= votingStart && block.timestamp < votingEnd);
+}
 
     function getRemainingTime() public view returns (uint256) {
         require(block.timestamp >= votingStart, "Voting has not started yet.");
         if (block.timestamp >= votingEnd) {
             return 0;
-    }
+        }
         return votingEnd - block.timestamp;
-    }
+}
 }
