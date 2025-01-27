@@ -1,5 +1,5 @@
 let WALLET_CONNECTED = "";
-let contractAddress = "0x20f1B4D6E2b52a9fBF1B7a5289e642d8239CB18F";
+let contractAddress = "0x7b4D938d001F711cD3814907c1b9626a1f2AEEB4";
 let contractAbi =  [
   {
     "inputs": [
@@ -187,12 +187,10 @@ const getAllCandidates = async () => {
           var candidates = await contractInstance.getAllVotesOfCandidates();
           console.log(candidates);
 
-          // Очистка таблицы перед добавлением новых данных
           var table = document.getElementById("myTable");
           var tbody = table.querySelector("tbody");
-          tbody.innerHTML = ""; // Очистка содержимого <tbody>
+          tbody.innerHTML = "";
 
-          // Заполнение таблицы новыми данными
           for (let i = 0; i < candidates.length; i++) {
               var row = tbody.insertRow();
               var idCell = row.insertCell();
@@ -229,42 +227,37 @@ const voteStatus = async () => {
         const signer = provider.getSigner();
         const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
 
-        // Получаем статус голосования
         const currentStatus = await contractInstance.getVotingStatus();
         status.innerHTML = currentStatus == 1 ? "Voting is currently open" : "Voting is finished";
 
-        // Получаем оставшееся время
-        let time = parseInt(await contractInstance.getRemainingTime(), 16); // Конвертация из hex в decimal
+        let time = parseInt(await contractInstance.getRemainingTime(), 16);
 
-        // Если голосование завершено, очищаем поле с временем
         if (time <= 0) {
             remainingTime.innerHTML = "Voting has ended.";
             if (timerInterval) {
-                clearInterval(timerInterval); // Останавливаем таймер
+                clearInterval(timerInterval);
                 timerInterval = null;
             }
             return;
         }
 
-        // Если голосование активно и таймер еще не был запущен
         if (!isVotingActive) {
             remainingTime.innerHTML = `Remaining time is ${time} seconds`;
 
-            // Запускаем динамический обратный отсчёт
             timerInterval = setInterval(() => {
                 if (time > 0) {
-                    time--; // Уменьшаем время
+                    time--;
                     remainingTime.innerHTML = `Remaining time is ${time} seconds`;
                 } else {
-                    clearInterval(timerInterval); // Останавливаем таймер, когда время закончилось
+                    clearInterval(timerInterval);
                     timerInterval = null;
                     remainingTime.innerHTML = "Voting has ended.";
                 }
-            }, 1000); // Обновление каждую секунду
+            }, 1000);
 
-            isVotingActive = true; // Устанавливаем флаг, что голосование активно
+            isVotingActive = true;
         } else {
-            remainingTime.innerHTML = `Remaining time is ${time} seconds`; // Просто обновляем время
+            remainingTime.innerHTML = `Remaining time is ${time} seconds`;
         }
     } else {
         var status = document.getElementById("status");
@@ -274,21 +267,38 @@ const voteStatus = async () => {
 
 
 
-const addVote = async() => {
-    if(WALLET_CONNECTED != 0) {
-        var name = document.getElementById("vote");
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
-        const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
-        var cand = document.getElementById("cand");
-        cand.innerHTML = "Please wait, adding a vote in the smart contract";
-        const tx = await contractInstance.vote(name.value);
-        await tx.wait();
-        cand.innerHTML = "Vote added !!!";
-    }
-    else {
-        var cand = document.getElementById("cand");
-        cand.innerHTML = "Please connect metamask first";
-    }
-}
+const addVote = async () => {
+  if (WALLET_CONNECTED != 0) {
+      const voteInput = document.getElementById("vote");
+      const cand = document.getElementById("cand");
+      const candidateIndex = parseInt(voteInput.value, 10);
+
+      if (isNaN(candidateIndex) || candidateIndex < 0) {
+          cand.innerHTML = "Error: Invalid candidate index. Please enter a valid number.";
+          return;
+      }
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = provider.getSigner();
+      const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
+
+      cand.innerHTML = "Please wait, adding a vote to the smart contract...";
+
+      try {
+          const tx = await contractInstance.vote(candidateIndex);
+          await tx.wait();
+          cand.innerHTML = "Vote added successfully!";
+      } catch (error) {
+          if (error.message.includes("Internal JSON-RPC error")) {
+              cand.innerHTML = "Error: The provided index is out of range or invalid.";
+          } else {
+              console.error("An error occurred:", error);
+              cand.innerHTML = `Error: ${error.message}`;
+          }
+      }
+  } else {
+      const cand = document.getElementById("cand");
+      cand.innerHTML = "Please connect Metamask first";
+  }
+};
