@@ -1,5 +1,5 @@
 let WALLET_CONNECTED = "";
-let contractAddress = "0x2a973ec3dBED87eE262cB515d3c2607260245877";
+let contractAddress = "0xdC4E6d1c8f0AbF0c689a1157023f16D299D9Bbb6";
 let contractAbi =  [
   {
     "inputs": [
@@ -16,6 +16,38 @@ let contractAbi =  [
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "name": "CandidateAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "candidateIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "Voted",
+    "type": "event"
   },
   {
     "inputs": [
@@ -172,6 +204,9 @@ const connectWallet = async() => {
     WALLET_CONNECTED = await signer.getAddress();
     var element = document.getElementById("metamasknotification");
     element.innerHTML = "Metamask is connected " + WALLET_CONNECTED;
+    
+    listenToEvents();
+    getHistoricalEvents();
 }
 
 const getAllCandidates = async () => {
@@ -265,8 +300,6 @@ const voteStatus = async () => {
     }
 };
 
-
-
 const addVote = async () => {
   if (WALLET_CONNECTED != 0) {
       const voteInput = document.getElementById("vote");
@@ -301,4 +334,50 @@ const addVote = async () => {
       const cand = document.getElementById("cand");
       cand.innerHTML = "Please connect Metamask first";
   }
+};
+
+const listenToEvents = async () => {
+  if (!WALLET_CONNECTED) {
+      console.error("Please connect Metamask first.");
+      return;
+  }
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
+
+  // Слушаем событие CandidateAdded
+  contractInstance.on("CandidateAdded", (name) => {
+      console.log(`New candidate added: ${name}`);
+      alert(`New candidate added: ${name}`);
+      getAllCandidates(); // Обновляем таблицу
+  });
+
+  // Слушаем событие Voted
+  contractInstance.on("Voted", (voter, candidateIndex) => {
+      console.log(`New vote: ${voter} voted for candidate index ${candidateIndex}`);
+      alert(`Vote casted by ${voter} for candidate index ${candidateIndex}`);
+      getAllCandidates(); // Обновляем таблицу
+  });
+};
+
+const getHistoricalEvents = async () => {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const contractInstance = new ethers.Contract(contractAddress, contractAbi, provider);
+
+  // Получаем события CandidateAdded
+  const candidateAddedEvents = await contractInstance.queryFilter("CandidateAdded");
+  console.log("CandidateAdded events:", candidateAddedEvents);
+
+  candidateAddedEvents.forEach((event) => {
+      console.log(`Candidate: ${event.args.name}`);
+  });
+
+  // Получаем события Voted
+  const votedEvents = await contractInstance.queryFilter("Voted");
+  console.log("Voted events:", votedEvents);
+
+  votedEvents.forEach((event) => {
+      console.log(`Voter: ${event.args.voter}, Candidate Index: ${event.args.candidateIndex}`);
+  });
 };
