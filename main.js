@@ -346,18 +346,16 @@ const listenToEvents = async () => {
   const signer = provider.getSigner();
   const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
 
-  // Слушаем событие CandidateAdded
   contractInstance.on("CandidateAdded", (name) => {
       console.log(`New candidate added: ${name}`);
       alert(`New candidate added: ${name}`);
-      getAllCandidates(); // Обновляем таблицу
+      getAllCandidates(); // update table
   });
 
-  // Слушаем событие Voted
   contractInstance.on("Voted", (voter, candidateIndex) => {
       console.log(`New vote: ${voter} voted for candidate index ${candidateIndex}`);
       alert(`Vote casted by ${voter} for candidate index ${candidateIndex}`);
-      getAllCandidates(); // Обновляем таблицу
+      getAllCandidates(); // update table
   });
 };
 
@@ -365,7 +363,7 @@ const getHistoricalEvents = async () => {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const contractInstance = new ethers.Contract(contractAddress, contractAbi, provider);
 
-  // Получаем события CandidateAdded
+  // event CandidateAdded
   const candidateAddedEvents = await contractInstance.queryFilter("CandidateAdded");
   console.log("CandidateAdded events:", candidateAddedEvents);
 
@@ -373,7 +371,7 @@ const getHistoricalEvents = async () => {
       console.log(`Candidate: ${event.args.name}`);
   });
 
-  // Получаем события Voted
+  // event Voted
   const votedEvents = await contractInstance.queryFilter("Voted");
   console.log("Voted events:", votedEvents);
 
