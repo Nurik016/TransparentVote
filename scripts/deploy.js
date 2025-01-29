@@ -2,7 +2,7 @@ async function main() {
   const Voting = await ethers.getContractFactory("Voting");
 
   // Start deployment, returning a promise that resolves to a contract object
-  const Voting_ = await Voting.deploy(["Nurik"], 10);
+  const Voting_ = await Voting.deploy([], 10);
   console.log("Contract address:", Voting_.address);
 
 
@@ -10,7 +10,7 @@ async function main() {
 
 main()
  .then(() => process.exit(0))
- .catch(error => {  
+ .catch(error => {
    console.error(error);
    process.exit(1);
  });

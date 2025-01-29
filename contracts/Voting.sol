@@ -43,6 +43,7 @@ contract Voting {
     }
 
     function vote(uint256 _candidateIndex) public {
+        require(candidates.length > 0, "No candidates available for voting."); // Проверка на пустой список
         require(!voters[msg.sender], "You have already voted.");
         require(_candidateIndex < candidates.length, "Invalid candidate index.");
 
@@ -50,7 +51,8 @@ contract Voting {
         voters[msg.sender] = true;
         
         emit Voted(msg.sender, _candidateIndex);
-    }
+}
+
 
     function getAllVotesOfCandidates() public view returns (Candidate[] memory){
         return candidates;

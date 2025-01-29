@@ -40,7 +40,6 @@ function validateCandidateName(name) {
         throw new Error("Candidate name cannot be empty.");
     }
 
-    // Проверка на наличие цифр
     for (let i = 0; i < name.length; i++) {
         if (!isNaN(name[i])) {
             throw new Error("Candidate name cannot contain digits.");
@@ -56,14 +55,12 @@ app.post("/addcandidate", async (req, res) => {
         // Проверка имени кандидата
         validateCandidateName(vote);
 
-        // Функция для добавления кандидата в блокчейн
         async function storeDataInBlockchain(vote) {
             console.log("Adding the candidate in voting contract...");
             const tx = await contractInstance.addCandidate(vote);
             await tx.wait();
         }
 
-        // Проверка статуса голосования
         const bool = await contractInstance.getVotingStatus();
         if (bool == true) {
             await storeDataInBlockchain(vote);
@@ -72,7 +69,6 @@ app.post("/addcandidate", async (req, res) => {
             res.send("Voting is finished.");
         }
     } catch (error) {
-        // Обработка ошибок
         console.error(error);
         res.status(400).send(error.message);
     }
