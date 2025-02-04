@@ -13,8 +13,8 @@ describe("Voting Contract", function () {
     Voting = await ethers.getContractFactory("Voting");
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
     voting = await Voting.connect(owner).deploy(
-      ["Alice", "Bob", "Charlie"],  // Candidate names
-      1  // 1 minute
+      ["Alice", "Bob", "Charlie"],  // Имена кандидатов
+      1  // 1 минута
     );
     await voting.deployed();
   });
@@ -32,7 +32,7 @@ describe("Voting Contract", function () {
   });
 
   it("Should allow owner to add a new candidate", async function () {
-    await voting.addCandidate("Dave");
+    await voting.connect(owner).addCandidate("Dave");
     const candidates = await voting.getAllVotesOfCandidates();
     expect(candidates.length).to.equal(4);
     expect(candidates[3].name).to.equal("Dave");
@@ -41,7 +41,7 @@ describe("Voting Contract", function () {
   it("Should prevent non-owners from adding candidates", async function () {
     await expect(voting.connect(addr1).addCandidate("Candidate 2"))
       .to.be.revertedWith("Only owner can add candidates.");
-    });
+  });
 
   it("Should allow a user to vote for a candidate", async function () {
     await voting.connect(addr1).vote(0);
@@ -51,17 +51,17 @@ describe("Voting Contract", function () {
 
   it("Should prevent double voting", async function () {
     await voting.connect(addr1).vote(0);
-    await expect(voting.connect(addr1).vote(0)).to.be.revertedWith("Already voted");
+    await expect(voting.connect(addr1).vote(0)).to.be.revertedWith("You have already voted.");
   });
 
   it("Should prevent voting after the deadline", async function () {
-    await ethers.provider.send("evm_increaseTime", [61]); // Just over 1 min
+    await ethers.provider.send("evm_increaseTime", [61]); // Чуть больше 1 минуты
     await ethers.provider.send("evm_mine", []);
-    await expect(voting.connect(addr1).vote(0)).to.be.revertedWith("Voting period has ended");
+    await expect(voting.connect(addr1).vote(0)).to.be.revertedWith("Voting has ended.");
   });
 
   it("Should prevent voting for an invalid candidate index", async function () {
-    await expect(voting.connect(addr1).vote(999)).to.be.revertedWith("Invalid candidate index");
+    await expect(voting.connect(addr1).vote(999)).to.be.revertedWith("Invalid candidate index.");
   });
 
   it("Should return all votes correctly", async function () {
@@ -74,13 +74,12 @@ describe("Voting Contract", function () {
     expect(votes[0]).to.equal(1);
     expect(votes[1]).to.equal(1);
     expect(votes[2]).to.equal(0);
-});
-
+  });
 
   it("Should return correct voting status", async function () {
     expect(await voting.getVotingStatus()).to.be.true;
-    await ethers.provider.send("evm_increaseTime", [61]); // Increase time past the voting duration
-    await ethers.provider.send("evm_mine", []); // Mine a new block to apply the time increase
+    await ethers.provider.send("evm_increaseTime", [61]); // Увеличиваем время более чем на 1 минуту
+    await ethers.provider.send("evm_mine", []); // Минем новый блок для применения увеличения времени
     expect(await voting.getVotingStatus()).to.be.false;
   });
 
