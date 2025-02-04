@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 contract Voting {
     struct Candidate {
         string name;
-        uint256 voteCount;
+        uint256 voteCount;  
     }
 
     Candidate[] public candidates;
-    address owner;
+    address public owner;
     mapping(address => bool) public voters;
 
     uint256 public votingStart;
@@ -30,7 +30,7 @@ contract Voting {
 }
 
     modifier onlyOwner {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Only owner can add candidates.");
         _;
     }
 
@@ -43,13 +43,13 @@ contract Voting {
     }
 
     function vote(uint256 _candidateIndex) public {
-        require(candidates.length > 0, "No candidates available for voting."); // Проверка на пустой список
+        require(block.timestamp >= votingStart && block.timestamp < votingEnd, "Voting has ended."); // Voting period check
         require(!voters[msg.sender], "You have already voted.");
         require(_candidateIndex < candidates.length, "Invalid candidate index.");
 
+
         candidates[_candidateIndex].voteCount++;
         voters[msg.sender] = true;
-        
         emit Voted(msg.sender, _candidateIndex);
 }
 
@@ -69,5 +69,5 @@ contract Voting {
         }
         return votingEnd - block.timestamp;
 }
-    
+   
 }
