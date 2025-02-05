@@ -3,7 +3,9 @@
 <head>
     <title>To Do Decentralized Application</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.1/ethers.umd.min.js" type="application/javascript"></script>
-    <script src="main.js" type="application/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="main.js" type="application/javascript" defer></script>
     <style>
         /* Root color variables inspired by the image */
         :root {
@@ -132,8 +134,8 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="/index.html">Vote</a>
-        <a href="/ListVoters.html">List Voters</a>
+        <a href="#" onclick="navigateTo('index.html')">Vote</a>
+        <a href="#" onclick="navigateTo('ListVoters.html')">List Voters</a>
     </div>
 
     <div>
@@ -147,9 +149,9 @@
     </div>
 
     <div class="container">
-        <form method="POST" action="/addcandidate" enctype="multipart/form-data">
+        <form id="addCandidateForm">
             <h2>Add candidate here</h2>
-            <input type="text" name="vote" placeholder="Add name of candidate ... ">
+            <input type="text"  id="candidateName" placeholder="Add name of candidate ... ">
             <button type="submit">Add Candidate</button>
         </form>
     </div>

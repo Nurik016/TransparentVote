@@ -34,8 +34,7 @@ app.get("/index.html", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 })
 
-// Проверка имени кандидата на пустоту и наличие цифр
-function validateCandidateName(name) {
+async function validateCandidateName(name) {
     if (!name || name.trim().length === 0) {
         throw new Error("Candidate name cannot be empty.");
     }
@@ -45,6 +44,12 @@ function validateCandidateName(name) {
             throw new Error("Candidate name cannot contain digits.");
         }
     }
+
+    // Проверка уникальности имени кандидата
+    const candidates = await contractInstance.getAllVotesOfCandidates();
+    if (candidates.some(candidate => candidate.name.toLowerCase() === name.toLowerCase())) {
+        throw new Error("Candidate name must be unique.");
+    }
 }
 
 app.post("/addcandidate", async (req, res) => {
@@ -52,8 +57,7 @@ app.post("/addcandidate", async (req, res) => {
     console.log(vote);
 
     try {
-        // Проверка имени кандидата
-        validateCandidateName(vote);
+        await validateCandidateName(vote);
 
         async function storeDataInBlockchain(vote) {
             console.log("Adding the candidate in voting contract...");

@@ -1,6 +1,6 @@
 let WALLET_CONNECTED = "";
-let contractAddress = "0x61cf98c3DE13e0BaBd5e841dB3838138CFee1b14";
-let contractAbi =  [
+let contractAddress = "0x73511669fd4dE447feD18BB79bAFeAC93aB7F31f";
+let contractAbi =   [
   {
     "inputs": [
       {
@@ -138,6 +138,19 @@ let contractAbi =  [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -196,6 +209,8 @@ let contractAbi =  [
     "type": "function"
   }
 ];
+
+console.log("Файл main.js загружен!");
 
 const connectWallet = async() => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -348,13 +363,13 @@ const listenToEvents = async () => {
 
   contractInstance.on("CandidateAdded", (name) => {
       console.log(`New candidate added: ${name}`);
-      alert(`New candidate added: ${name}`);
+      // alert(`New candidate added: ${name}`);
       getAllCandidates(); // update table
   });
 
   contractInstance.on("Voted", (voter, candidateIndex) => {
       console.log(`New vote: ${voter} voted for candidate index ${candidateIndex}`);
-      alert(`Vote casted by ${voter} for candidate index ${candidateIndex}`);
+      // alert(`Vote casted by ${voter} for candidate index ${candidateIndex}`);
       getAllCandidates(); // update table
   });
 };
@@ -379,3 +394,65 @@ const getHistoricalEvents = async () => {
       console.log(`Voter: ${event.args.voter}, Candidate Index: ${event.args.candidateIndex}`);
   });
 };
+
+//test
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("DOM загружен!"); // Проверяем, загружен ли DOM
+
+  document.getElementById("addCandidateForm").addEventListener("submit", async function (event) {
+      event.preventDefault(); // Останавливаем обновление страницы
+      console.log("Нажата кнопка 'Добавить кандидата'"); // Проверка
+
+      let name = document.getElementById("candidateName").value.trim();
+      if (!name) {
+          showToast("Введите имя кандидата!", "red");
+          return;
+      }
+
+      showToast("Добавление кандидата...", "blue");
+
+      try {
+          let response = await fetch("/addcandidate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ vote: name })
+          });
+
+          let result = await response.text();
+          if (response.ok) {
+              showToast("Кандидат успешно добавлен!", "green");
+          } else {
+              showToast(result, "red");
+          }
+      } catch (error) {
+          showToast("Ошибка при добавлении кандидата.", "red");
+      }
+  });
+});
+
+// Функция для показа уведомлений
+function showToast(text, color) {
+  Toastify({
+      text: text,
+      duration: 5000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: color,
+  }).showToast();
+}
+
+async function navigateTo(page) {
+    history.pushState({}, "", page);
+    document.body.innerHTML = await fetch(page).then(res => res.text());
+}
+window.onpopstate = () => navigateTo(location.pathname);
+
+
+document.getElementById("addCandidateForm").addEventListener("submit", async function (event) {
+  event.preventDefault();
+  
+  const addButton = event.target.querySelector("button");
+  global.addCandidateButton = addButton; // Передаем кнопку в глобальный объект
+
+  addCandidate();
+});

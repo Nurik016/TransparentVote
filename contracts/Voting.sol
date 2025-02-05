@@ -34,11 +34,12 @@ contract Voting {
         _;
     }
 
+    mapping(string => bool) private candidateExists;
+
     function addCandidate(string memory _name) public onlyOwner {
-        candidates.push(Candidate({
-                name: _name,
-                voteCount: 0
-        }));
+        require(!candidateExists[_name], "Candidate already exists.");
+        candidates.push(Candidate({ name: _name, voteCount: 0 }));
+        candidateExists[_name] = true;
         emit CandidateAdded(_name);
     }
 
