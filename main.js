@@ -397,37 +397,44 @@ const getHistoricalEvents = async () => {
 
 //test
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("DOM загружен!"); // Проверяем, загружен ли DOM
+  console.log("✅ DOM загружен!");
 
-  document.getElementById("addCandidateForm").addEventListener("submit", async function (event) {
-      event.preventDefault(); // Останавливаем обновление страницы
-      console.log("Нажата кнопка 'Добавить кандидата'"); // Проверка
+  // Обработчик формы добавления кандидата
+  const addCandidateForm = document.getElementById("addCandidateForm");
+  if (addCandidateForm) {
+      addCandidateForm.addEventListener("submit", async function (event) {
+          event.preventDefault(); // Останавливаем обновление страницы
+          console.log("🔹 Нажата кнопка 'Добавить кандидата'");
 
-      let name = document.getElementById("candidateName").value.trim();
-      if (!name) {
-          showToast("Введите имя кандидата!", "red");
-          return;
-      }
-
-      showToast("Добавление кандидата...", "blue");
-
-      try {
-          let response = await fetch("/addcandidate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ vote: name })
-          });
-
-          let result = await response.text();
-          if (response.ok) {
-              showToast("Кандидат успешно добавлен!", "green");
-          } else {
-              showToast(result, "red");
+          let name = document.getElementById("candidateName").value.trim();
+          if (!name) {
+              showToast("❌ Введите имя кандидата!", "red");
+              return;
           }
-      } catch (error) {
-          showToast("Ошибка при добавлении кандидата.", "red");
-      }
-  });
+
+          showToast("⏳ Добавление кандидата...", "blue");
+
+          try {
+              let response = await fetch("/addcandidate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ vote: name })
+              });
+
+              let result = await response.text();
+              if (response.ok) {
+                  showToast("✅ Кандидат успешно добавлен!", "green");
+              } else {
+                  showToast(result, "red");
+              }
+          } catch (error) {
+              showToast("❌ Ошибка при добавлении кандидата.", "red");
+          }
+      });
+  }
+
+  // Обновление UI в зависимости от состояния Hardhat Node
+  updateUIBasedOnNode();
 });
 
 // Функция для показа уведомлений
@@ -441,18 +448,60 @@ function showToast(text, color) {
   }).showToast();
 }
 
+// Навигация между страницами без перезагрузки
 async function navigateTo(page) {
-    history.pushState({}, "", page);
-    document.body.innerHTML = await fetch(page).then(res => res.text());
+  history.pushState({}, "", page);
+  document.body.innerHTML = await fetch(page).then(res => res.text());
 }
 window.onpopstate = () => navigateTo(location.pathname);
 
+// Проверка состояния Hardhat Node
+let nodeConnected = null; // null - неизвестно, true - работает, false - отключен
 
-document.getElementById("addCandidateForm").addEventListener("submit", async function (event) {
-  event.preventDefault();
-  
-  const addButton = event.target.querySelector("button");
-  global.addCandidateButton = addButton; // Передаем кнопку в глобальный объект
+async function checkHardhatNode() {
+    try {
+        const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
+        await provider.getBlockNumber(); // Проверяем, доступен ли узел
 
-  addCandidate();
-});
+        if (nodeConnected !== true) { 
+            showToast("✅ Hardhat Node is connected", "green"); // Показываем уведомление один раз
+            nodeConnected = true;
+        }
+
+        // Обновляем статус на странице
+        const statusElement = document.getElementById("nodeStatus");
+        if (statusElement) statusElement.innerText = "✅ Hardhat Node is connected";
+
+        return true;
+    } catch (error) {
+        console.error("❌ Hardhat Node is down", error);
+
+        if (nodeConnected !== false) { 
+            showToast("❌ Hardhat Node is down!", "red"); // Показываем уведомление один раз
+            nodeConnected = false;
+        }
+
+        // Обновляем статус на странице
+        const statusElement = document.getElementById("nodeStatus");
+        if (statusElement) statusElement.innerText = "❌ Hardhat Node is down!";
+
+        return false;
+    }
+}
+
+// Функция обновления интерфейса
+async function updateUIBasedOnNode() {
+    const isOnline = await checkHardhatNode();
+
+    document.querySelectorAll("button").forEach(button => {
+        button.disabled = !isOnline;
+    });
+
+    document.querySelectorAll("input").forEach(input => {
+        input.disabled = !isOnline;
+    });
+}
+
+// Проверяем Hardhat Node каждые 5 секунд
+setInterval(updateUIBasedOnNode, 5000);
+updateUIBasedOnNode();
