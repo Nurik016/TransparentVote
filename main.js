@@ -210,7 +210,7 @@ let contractAbi =   [
   }
 ];
 
-console.log("Файл main.js загружен!");
+console.log("The main.js file has been uploaded!");
 
 const connectWallet = async() => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -397,22 +397,22 @@ const getHistoricalEvents = async () => {
 
 //test
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("✅ DOM загружен!");
+  console.log("✅ DOM loaded!");
 
   // Обработчик формы добавления кандидата
   const addCandidateForm = document.getElementById("addCandidateForm");
   if (addCandidateForm) {
       addCandidateForm.addEventListener("submit", async function (event) {
           event.preventDefault(); // Останавливаем обновление страницы
-          console.log("🔹 Нажата кнопка 'Добавить кандидата'");
+          console.log("🔹 The 'Add candidate' button is pressed'");
 
           let name = document.getElementById("candidateName").value.trim();
           if (!name) {
-              showToast("❌ Введите имя кандидата!", "red");
+              showToast("❌ Enter the candidate's name!", "red");
               return;
           }
 
-          showToast("⏳ Добавление кандидата...", "blue");
+          showToast("⏳ Adding a candidate...", "blue");
 
           try {
               let response = await fetch("/addcandidate", {
@@ -423,12 +423,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
               let result = await response.text();
               if (response.ok) {
-                  showToast("✅ Кандидат успешно добавлен!", "green");
+                  showToast("✅ Candidate has been successfully added!", "green");
               } else {
                   showToast(result, "red");
               }
           } catch (error) {
-              showToast("❌ Ошибка при добавлении кандидата.", "red");
+              showToast("❌ Error when adding a candidate.", "red");
           }
       });
   }
